@@ -1,5 +1,7 @@
 #!/bin/bash
-set -e
+#set -e
+
+set -ex
 
 GITLAB_CLONE_URL=https://gitlab.com/gitlab-org/gitlab-foss.git
 GITLAB_SHELL_URL=https://gitlab.com/gitlab-org/gitlab-shell/-/archive/v${GITLAB_SHELL_VERSION}/gitlab-shell-v${GITLAB_SHELL_VERSION}.tar.bz2
@@ -26,6 +28,14 @@ export GOROOT PATH
 #   libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev \
 #   gettext libkrb5-dev"
 
+apt remove libpq5 -y
+# Вставки для переноса в Dockerfile
+wget https://archive.debian.org/debian/pool/main/p/postgresql-11/libpq5_11.16-0+deb10u1_amd64.deb
+wget https://archive.debian.org/debian/pool/main/p/postgresql-11/libpq-dev_11.16-0+deb10u1_amd64.deb
+
+dpkg -i libpq5_11.16-0+deb10u1_amd64.deb libpq-dev_11.16-0+deb10u1_amd64.deb
+rm libpq*
+
 ## Execute a command as GITLAB_USER
 exec_as_git() {
   if [[ $(whoami) == "${GITLAB_USER}" ]]; then
@@ -36,8 +46,8 @@ exec_as_git() {
 }
 
 # install build dependencies for gem installation (вынесено в dockerfile)
-# apt-get update
-# DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y ${BUILD_DEPENDENCIES}
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y ${BUILD_DEPENDENCIES}
 
 # build ruby from source
 echo "Building ruby v${RUBY_VERSION} from source..."
@@ -160,6 +170,7 @@ exec_as_git sed -i 's/db:reset/db:setup/' ${GITLAB_INSTALL_DIR}/lib/tasks/gitlab
 
 cd ${GITLAB_INSTALL_DIR}
 
+echo "step one..."
 # install gems, use local cache if available
 if [[ -d ${GEM_CACHE_DIR} ]]; then
   echo "Found local npm package cache..."
@@ -167,9 +178,13 @@ if [[ -d ${GEM_CACHE_DIR} ]]; then
   chown -R ${GITLAB_USER}: ${GITLAB_INSTALL_DIR}/vendor/cache
 fi
 
+echo "step two..."
 exec_as_git bundle config set --local deployment 'true'
+echo "step three..."
 exec_as_git bundle config set --local without 'development test mysql aws'
+echo "step four..."
 exec_as_git bundle install -j"$(nproc)"
+echo "step five..."
 
 # make sure everything in ${GITLAB_HOME} is owned by ${GITLAB_USER} user
 chown -R ${GITLAB_USER}: ${GITLAB_HOME}
@@ -179,12 +194,15 @@ exec_as_git cp ${GITLAB_INSTALL_DIR}/config/resque.yml.example ${GITLAB_INSTALL_
 exec_as_git cp ${GITLAB_INSTALL_DIR}/config/gitlab.yml.example ${GITLAB_INSTALL_DIR}/config/gitlab.yml
 exec_as_git cp ${GITLAB_INSTALL_DIR}/config/database.yml.postgresql ${GITLAB_INSTALL_DIR}/config/database.yml
 
+echo "step six..."
 # Installs nodejs packages required to compile webpack
-exec_as_git yarn install --production --pure-lockfile
-exec_as_git yarn add ajv@^4.0.0
+exec_as_git bash -c 'yarn install --production --pure-lockfile'
+echo "step seven..."
+exec_as_git bash -c 'yarn add ajv@^4.0.0'
+echo "step eigth..."
 
 echo "Compiling assets. Please be patient, this could take a while..."
-exec_as_git bundle exec rake gitlab:assets:compile USE_DB=false SKIP_STORAGE_VALIDATION=true NODE_OPTIONS="--max-old-space-size=4096"
+exec_as_git bash -c 'bundle exec rake gitlab:assets:compile USE_DB=false SKIP_STORAGE_VALIDATION=true NODE_OPTIONS="--max-old-space-size=4096"'
 
 # remove auto generated ${GITLAB_DATA_DIR}/config/secrets.yml
 rm -rf ${GITLAB_DATA_DIR}/config/secrets.yml

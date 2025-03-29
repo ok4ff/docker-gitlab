@@ -1,5 +1,6 @@
 #FROM ubuntu:focal-20211006
 FROM registry.astralinux.ru/library/astra/ubi17:1.7.6
+#FROM astraprepare:latest
 
 ARG VERSION=14.4.3
 
@@ -15,7 +16,8 @@ ENV GITLAB_VERSION=${VERSION} \
     GITLAB_LOG_DIR="/var/log/gitlab" \
     GITLAB_CACHE_DIR="/etc/docker-gitlab" \
     RAILS_ENV=production \
-    NODE_ENV=production
+    NODE_ENV=production \
+    NODEJS_VERSION=16
 
 ENV GITLAB_INSTALL_DIR="${GITLAB_HOME}/gitlab" \
     GITLAB_SHELL_INSTALL_DIR="${GITLAB_HOME}/gitlab-shell" \
@@ -24,41 +26,50 @@ ENV GITLAB_INSTALL_DIR="${GITLAB_HOME}/gitlab" \
     GITLAB_BUILD_DIR="${GITLAB_CACHE_DIR}/build" \
     GITLAB_RUNTIME_DIR="${GITLAB_CACHE_DIR}/runtime"
 
-RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-    wget ca-certificates apt-transport-https gnupg2
-    # && rm -rf /var/lib/apt/lists/* - включить для сокращения размера образа
 
 RUN set -ex \
+    # Добавляем репозиторий Yarn
     && curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
-    && set -ex \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-    curl sudo supervisor logrotate locales \
+    # Утилиты и системные инструменты
+    curl sudo supervisor logrotate locales tzdata unzip wget tar \
+    wget ca-certificates apt-transport-https gnupg2 yarn zlib1g-dev \
+    # Веб-сервер и SSH
+    && apt-get install --no-install-recommends -y \
     nginx openssh-server \
-    postgresql-client postgresql-contrib redis-tools \
+    # Базы данных и инструменты работы с ними
+    && apt-get install --no-install-recommends -y \
+    postgresql-client postgresql-contrib redis-tools libpq5 libkrb5-dev \
+    # && wget https://archive.debian.org/debian/pool/main/p/postgresql-11/libpq5_11.16-0+deb10u1_amd64.deb \
+    # && wget https://archive.debian.org/debian/pool/main/p/postgresql-11/libpq-dev_11.16-0+deb10u1_amd64.deb \
+    #&& dpkg -i libpq5_11.16-0+deb10u1_amd64.deb libpq-dev_11.16-0+deb10u1_amd64.deb \
+    # && dpkg -i libpq-dev_11.16-0+deb10u1_amd64.deb \
+    # Основные языки и инструменты разработки
+    && apt-get install --no-install-recommends -y \
     git-core python3 python3-docutils gettext-base graphicsmagick \
-    libpq5 zlib1g libyaml-0-2 libssl1.1 \
-    libgdbm6  libncurses5  \
-    libxml2 libxslt1.1 libcurl4 libre2-dev tzdata unzip libimage-exiftool-perl \
-    libmagic1 yarn \
-    libreadline-dev libffi-dev libicu-dev \
-    gcc g++ make patch pkg-config cmake wget  tar\
-    libc6-dev  \
-    libpq-dev zlib1g-dev libyaml-dev libssl-dev \
-    libgdbm-dev libreadline-dev libncurses5-dev libffi-dev \
-    libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev \
-    gettext libkrb5-dev \
+    # Библиотеки для Ruby и компиляции
+    && apt-get install --no-install-recommends -y \
+    gcc g++ make patch pkg-config cmake autoconf bison build-essential \
+    # Системные библиотеки (OpenSSL, Zlib, Readline, ICU и другие)
+    && apt-get install --no-install-recommends -y \
+    libssl-dev libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev \
+    libffi-dev libxml2-dev libxslt1.1 libcurl4-openssl-dev libre2-dev \
+    libicu-dev libmagic1 libimage-exiftool-perl libdb-dev \
+    # Установка Pax из внешних источников
     && wget http://pax.grsecurity.net/paxctl-0.9.tar.gz  \
-    && tar -xvzf paxctl-0.9.tar.gz && cd paxctl-0.9 && make install \
-    && cd .. && rm -rf paxctl-0.9* \
-    && curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash \
-    && export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm install 20 && nvm use 20 \
+    && tar -xvzf paxctl-0.9.tar.gz && cd paxctl-0.9 && make install  && cd ..  \
+    #  Настройка локали
     && update-locale LANG=C.UTF-8 LC_MESSAGES=POSIX \
     && locale-gen en_US.UTF-8 \
-    && DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales
-    # && rm -rf /var/lib/apt/lists/* - включить для сокращения размера образа
+    && DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales \
+    # Добавление репозитория nodeJS и настройка приоритетов
+    && curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x | bash - \
+    &&  echo -e "Package: nodejs\nPin: origin \"deb.nodesource.com\"\nPin-Priority: 1000" | tee /etc/apt/preferences.d/99nodesource \
+    && apt-get update && apt-get install --no-install-recommends -y nodejs \
+    # Очистка
+    && rm -rf paxctl-0.9* &&  rm -rf /var/lib/apt/lists/*
 
 COPY assets/build/ ${GITLAB_BUILD_DIR}/
 RUN bash ${GITLAB_BUILD_DIR}/install.sh
