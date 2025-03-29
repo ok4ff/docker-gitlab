@@ -35,7 +35,7 @@ RUN set -ex \
     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
     # Утилиты и системные инструменты
     curl sudo supervisor logrotate locales tzdata unzip wget tar \
-    wget ca-certificates apt-transport-https gnupg2 yarn zlib1g-dev redis-tools \
+    wget ca-certificates apt-transport-https gnupg2 yarn zlib1g-dev redis-tools libkrb5-dev \
     # Веб-сервер и SSH
     && apt-get install --no-install-recommends -y \
     nginx openssh-server \
