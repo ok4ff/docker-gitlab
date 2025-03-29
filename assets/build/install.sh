@@ -19,12 +19,12 @@ PATH=${GOROOT}/bin:$PATH
 
 export GOROOT PATH
 
-BUILD_DEPENDENCIES="gcc g++ make patch pkg-config cmake paxctl \
-  libc6-dev \
-  libpq-dev zlib1g-dev libyaml-dev libssl-dev \
-  libgdbm-dev libreadline-dev libncurses5-dev libffi-dev \
-  libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev \
-  gettext libkrb5-dev"
+# BUILD_DEPENDENCIES="gcc g++ make patch pkg-config cmake paxctl \
+#   libc6-dev \
+#   libpq-dev zlib1g-dev libyaml-dev libssl-dev \
+#   libgdbm-dev libreadline-dev libncurses5-dev libffi-dev \
+#   libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev \
+#   gettext libkrb5-dev"
 
 ## Execute a command as GITLAB_USER
 exec_as_git() {
@@ -35,9 +35,9 @@ exec_as_git() {
   fi
 }
 
-# install build dependencies for gem installation
-apt-get update
-DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y ${BUILD_DEPENDENCIES}
+# install build dependencies for gem installation (вынесено в dockerfile)
+# apt-get update
+# DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y ${BUILD_DEPENDENCIES}
 
 # build ruby from source
 echo "Building ruby v${RUBY_VERSION} from source..."
@@ -450,4 +450,4 @@ rm -rf /var/lib/apt/lists/*
 # clean up caches
 rm -rf ${GITLAB_HOME}/.cache ${GITLAB_HOME}/.bundle ${GITLAB_HOME}/go
 rm -rf /root/.cache /root/.bundle ${GITLAB_HOME}/gitlab/node_modules
-rm -r /tmp/* 
+rm -r /tmp/*
