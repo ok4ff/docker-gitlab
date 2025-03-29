@@ -35,17 +35,10 @@ RUN set -ex \
     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
     # Утилиты и системные инструменты
     curl sudo supervisor logrotate locales tzdata unzip wget tar \
-    wget ca-certificates apt-transport-https gnupg2 yarn zlib1g-dev \
+    wget ca-certificates apt-transport-https gnupg2 yarn zlib1g-dev redis-tools \
     # Веб-сервер и SSH
     && apt-get install --no-install-recommends -y \
     nginx openssh-server \
-    # Базы данных и инструменты работы с ними
-    && apt-get install --no-install-recommends -y \
-    postgresql-client postgresql-contrib redis-tools libpq5 libkrb5-dev \
-    # && wget https://archive.debian.org/debian/pool/main/p/postgresql-11/libpq5_11.16-0+deb10u1_amd64.deb \
-    # && wget https://archive.debian.org/debian/pool/main/p/postgresql-11/libpq-dev_11.16-0+deb10u1_amd64.deb \
-    #&& dpkg -i libpq5_11.16-0+deb10u1_amd64.deb libpq-dev_11.16-0+deb10u1_amd64.deb \
-    # && dpkg -i libpq-dev_11.16-0+deb10u1_amd64.deb \
     # Основные языки и инструменты разработки
     && apt-get install --no-install-recommends -y \
     git-core python3 python3-docutils gettext-base graphicsmagick \
