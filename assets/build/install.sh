@@ -31,13 +31,13 @@ export GOROOT PATH
 
 # Установка инструментов postgresql 11 из архива debian
 #wget https://archive.debian.org/debian/pool/main/p/postgresql-11/postgresql-client-11_11.16-0+deb10u1_amd64.deb
-wget https://archive.debian.org/debian/pool/main/p/postgresql-11/libpq5_11.16-0+deb10u1_amd64.deb
-wget https://archive.debian.org/debian/pool/main/p/postgresql-11/libpq-dev_11.16-0+deb10u1_amd64.deb
+# wget https://archive.debian.org/debian/pool/main/p/postgresql-11/libpq5_11.16-0+deb10u1_amd64.deb
+# wget https://archive.debian.org/debian/pool/main/p/postgresql-11/libpq-dev_11.16-0+deb10u1_amd64.deb
 
 #dpkg -i libpq5_11.16-0+deb10u1_amd64.deb libpq-dev_11.16-0+deb10u1_amd64.deb postgresql-client-11_11.16-0+deb10u1_amd64.deb
-dpkg -i libpq5_11.16-0+deb10u1_amd64.deb libpq-dev_11.16-0+deb10u1_amd64.deb
+# dpkg -i libpq5_11.16-0+deb10u1_amd64.deb libpq-dev_11.16-0+deb10u1_amd64.deb
 #rm libpq* postgresql-client-11_11.16-0+deb10u1_amd64.deb
-rm libpq*
+# rm libpq*
 
 ## Execute a command as GITLAB_USER
 exec_as_git() {

@@ -1,6 +1,6 @@
 #FROM ubuntu:focal-20211006
-FROM registry.astralinux.ru/library/astra/ubi17:1.7.6
-#FROM astraprepare:latest
+#FROM registry.astralinux.ru/library/astra/ubi18:1.8
+FROM astra18prepare:latest
 
 ARG VERSION=14.4.3
 
@@ -27,42 +27,57 @@ ENV GITLAB_INSTALL_DIR="${GITLAB_HOME}/gitlab" \
     GITLAB_RUNTIME_DIR="${GITLAB_CACHE_DIR}/runtime"
 
 
-RUN set -ex \
-    # Добавляем репозиторий Yarn
-    && curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-    && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
-    && apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-    # Утилиты и системные инструменты
-    curl sudo supervisor logrotate locales tzdata unzip wget tar \
-    wget ca-certificates apt-transport-https gnupg2 yarn zlib1g-dev redis-tools libkrb5-dev \
-    # Веб-сервер и SSH
-    && apt-get install --no-install-recommends -y \
-    nginx openssh-server \
-    # Основные языки и инструменты разработки
-    && apt-get install --no-install-recommends -y \
-    git-core python3 python3-docutils gettext-base graphicsmagick \
-    # Библиотеки для Ruby и компиляции
-    && apt-get install --no-install-recommends -y \
-    gcc g++ make patch pkg-config cmake autoconf bison build-essential \
-    # Системные библиотеки (OpenSSL, Zlib, Readline, ICU и другие)
-    && apt-get install --no-install-recommends -y \
-    libssl-dev libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev \
-    libffi-dev libxml2-dev libxslt1.1 libcurl4-openssl-dev libre2-dev \
-    libicu-dev libmagic1 libimage-exiftool-perl libdb-dev \
-    # Установка Pax из внешних источников
-    && wget http://pax.grsecurity.net/paxctl-0.9.tar.gz  \
-    && tar -xvzf paxctl-0.9.tar.gz && cd paxctl-0.9 && make install  && cd ..  \
-    #  Настройка локали
-    && update-locale LANG=C.UTF-8 LC_MESSAGES=POSIX \
-    && locale-gen en_US.UTF-8 \
-    && DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales \
-    # Добавление репозитория nodeJS и настройка приоритетов
-    && curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x | bash - \
-    &&  echo -e "Package: nodejs\nPin: origin \"deb.nodesource.com\"\nPin-Priority: 1000" | tee /etc/apt/preferences.d/99nodesource \
-    && apt-get update && apt-get install --no-install-recommends -y nodejs \
-    # Очистка
-    && rm -rf paxctl-0.9* &&  rm -rf /var/lib/apt/lists/*
+# RUN set -ex \
+#     && apt-get update \
+#     # Инструменты для подключения и распаковки зависимостей
+#     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+#     wget curl ca-certificates unzip tar \
+#     && mkdir -p /etc/apt/keyrings \
+#     # Добавляем репозиторий Yarn
+#     && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor -o /etc/apt/keyrings/yarn.gpg \
+#     && echo "deb [signed-by=/etc/apt/keyrings/yarn.gpg] https://dl.yarnpkg.com/debian stable main" > /etc/apt/sources.list.d/yarn.list \
+#     # Добавляем репозиторий postgres
+#     && install -d /usr/share/postgresql-common/pgdg \
+#     && curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+#     && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+#     # Добавляем репозиторий nodejs
+#     && wget -qO - https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/nodesource.gpg \
+#     && echo "deb https://deb.nodesource.com/node_${NODEJS_VERSION}.x bookworm main" > /etc/apt/sources.list.d/nodesource.list \
+#     && apt-get update \
+#     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+#     # Утилиты и системные инструменты
+#     sudo supervisor logrotate locales tzdata \
+#     wget ca-certificates apt-transport-https gnupg2 yarn zlib1g-dev libkrb5-dev \
+#     # Инструментарий для работы с базами данных и кешем
+#     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+#     redis-tools postgresql-client-12 postgresql-server-dev-12 \
+#     #postgresql-contrib-12  - нету для debian12 \
+#     # Веб-сервер и SSH
+#     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+#     nginx openssh-server \
+#     # Основные языки и инструменты разработки
+#     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+#     git-core python3 python3-docutils gettext-base graphicsmagick \
+#     # Библиотеки для Ruby и компиляции
+#     && DEBIAN_FRONTEND=noninteractive  apt-get install --no-install-recommends -y \
+#     gcc g++ make patch pkg-config cmake autoconf bison build-essential \
+#     # Системные библиотеки (OpenSSL, Zlib, Readline, ICU и другие)
+#     && DEBIAN_FRONTEND=noninteractive  apt-get install --no-install-recommends -y \
+#     libssl-dev libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev \
+#     libffi-dev libxml2-dev libxslt1.1 libcurl4-openssl-dev libre2-dev \
+#     libicu-dev libmagic1 libimage-exiftool-perl libdb-dev \
+#     # Установка Pax из внешних источников
+#     && wget http://pax.grsecurity.net/paxctl-0.9.tar.gz  \
+#     && tar -xvzf paxctl-0.9.tar.gz && cd paxctl-0.9 && make install  && cd ..  \
+#     #  Настройка локали
+#     && update-locale LANG=C.UTF-8 LC_MESSAGES=POSIX \
+#     && locale-gen en_US.UTF-8 \
+#     && DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales \
+#     # Добавление репозитория nodeJS и настройка приоритетов
+#     &&  echo -e "Package: nodejs\nPin: origin \"deb.nodesource.com\"\nPin-Priority: 1000"  > /etc/apt/preferences.d/99nodesource \
+#     && apt-get update && DEBIAN_FRONTEND=noninteractive  apt-get install --no-install-recommends -y nodejs \
+#     # Очистка
+#     && rm -rf paxctl-0.9* &&  rm -rf /var/lib/apt/lists/*
 
 COPY assets/build/ ${GITLAB_BUILD_DIR}/
 RUN bash ${GITLAB_BUILD_DIR}/install.sh
