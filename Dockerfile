@@ -34,24 +34,33 @@ ENV GITLAB_INSTALL_DIR="${GITLAB_HOME}/gitlab" \
 #     wget curl ca-certificates unzip tar \
 #     && mkdir -p /etc/apt/keyrings \
 #     # Добавляем репозиторий Yarn
-#     && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor -o /etc/apt/keyrings/yarn.gpg \
+#     && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor --batch > /etc/apt/keyrings/yarn.gpg \
 #     && echo "deb [signed-by=/etc/apt/keyrings/yarn.gpg] https://dl.yarnpkg.com/debian stable main" > /etc/apt/sources.list.d/yarn.list \
 #     # Добавляем репозиторий postgres
 #     && install -d /usr/share/postgresql-common/pgdg \
 #     && curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc \
 #     && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
 #     # Добавляем репозиторий nodejs
-#     && wget -qO - https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/nodesource.gpg \
+#     && wget -qO - https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor --batch > /etc/apt/trusted.gpg.d/nodesource.gpg \
 #     && echo "deb https://deb.nodesource.com/node_${NODEJS_VERSION}.x bookworm main" > /etc/apt/sources.list.d/nodesource.list \
 #     && apt-get update \
 #     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
 #     # Утилиты и системные инструменты
-#     sudo supervisor logrotate locales tzdata \
+#     supervisor logrotate locales tzdata \
 #     wget ca-certificates apt-transport-https gnupg2 yarn zlib1g-dev libkrb5-dev \
+#     # Установка ruby version manager
+#     && gpg --keyserver keyserver.ubuntu.com --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB \
+#     && curl -sSL https://get.rvm.io | bash -s stable \
+#     && usermod -a -G rvm root \
+#     && echo "[[ -s /usr/local/rvm/scripts/rvm ]] && source /usr/local/rvm/scripts/rvm" >> ~/.bashrc \
+#     && rvm install ${RUBY_VERSION} \
+#     # Установка gosu
+#     && curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.17/gosu-amd64" && \
+#     chmod +x /usr/local/bin/gosu \
 #     # Инструментарий для работы с базами данных и кешем
 #     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
 #     redis-tools postgresql-client-12 postgresql-server-dev-12 \
-#     #postgresql-contrib-12  - нету для debian12 \
+#     # postgresql-contrib-12  - нету для debian12 !!!!! \
 #     # Веб-сервер и SSH
 #     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
 #     nginx openssh-server \
