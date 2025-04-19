@@ -22,7 +22,8 @@ services:
 
   gitlab:
     restart: always
-    image: sameersbn/gitlab:14.4.3
+    # image: sameersbn/gitlab:14.4.3
+    image: gitlab:14.4.3-astra1.7
     depends_on:
     - redis
     - postgresql
@@ -37,8 +38,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 5m
+    # entrypoint: bash
+    # command: -c 'tail -f /dev/null'
     environment:
     - DEBUG=false
+    # - GITLAB_LOG_LEVEL=debug
 
     - DB_ADAPTER=postgresql
     - DB_HOST=postgresql

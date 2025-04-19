@@ -1,6 +1,4 @@
-#FROM ubuntu:focal-20211006
 FROM registry.astralinux.ru/library/astra/ubi17:1.7.6
-#FROM astraprepare:latest
 
 ARG VERSION=14.4.3
 
@@ -28,7 +26,7 @@ ENV GITLAB_INSTALL_DIR="${GITLAB_HOME}/gitlab" \
 
 
 RUN set -ex \
-    # Добавляем репозиторий Yarn
+    # Репозиторий Yarn
     && curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
     && apt-get update \
@@ -41,15 +39,24 @@ RUN set -ex \
     nginx openssh-server \
     # Основные языки и инструменты разработки
     && apt-get install --no-install-recommends -y \
-    git-core python3 python3-docutils gettext-base graphicsmagick \
+    python3 python3-docutils gettext-base graphicsmagick \
     # Библиотеки для Ruby и компиляции
     && apt-get install --no-install-recommends -y \
     gcc g++ make patch pkg-config cmake autoconf bison build-essential \
+    # git версии 2.34.1
+    && apt-get install --no-install-recommends -y \
+    libcurl4-openssl-dev libexpat1-dev gettext unzip zlib1g-dev libssl-dev \
+    && wget https://github.com/git/git/archive/refs/tags/v2.34.1.tar.gz \
+    && tar -xvzf v2.34.1.tar.gz && cd git-2.34.1 \
+    && make prefix=/usr/local all && make prefix=/usr/local install && mv  /usr/local/bin/git /usr/bin/ \
+    && cd .. && rm -rf git-2.34.1 v2.34.1.tar.gz \
     # Системные библиотеки (OpenSSL, Zlib, Readline, ICU и другие)
     && apt-get install --no-install-recommends -y \
-    libssl-dev libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev \
+    libssl-dev libyaml-dev libyaml-0-2 libgdbm-dev libreadline-dev libncurses5-dev \
     libffi-dev libxml2-dev libxslt1.1 libcurl4-openssl-dev libre2-dev \
     libicu-dev libmagic1 libimage-exiftool-perl libdb-dev \
+    # PostgreSQL
+    && apt-get install --no-install-recommends -y  postgresql-client postgresql-server-dev-all libsqlite3-dev \
     # Установка Pax из внешних источников
     && wget http://pax.grsecurity.net/paxctl-0.9.tar.gz  \
     && tar -xvzf paxctl-0.9.tar.gz && cd paxctl-0.9 && make install  && cd ..  \

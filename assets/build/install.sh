@@ -21,23 +21,19 @@ PATH=${GOROOT}/bin:$PATH
 
 export GOROOT PATH
 
-# BUILD_DEPENDENCIES="gcc g++ make patch pkg-config cmake paxctl \
-#   libc6-dev \
-#   libpq-dev zlib1g-dev libyaml-dev libssl-dev \
-#   libgdbm-dev libreadline-dev libncurses5-dev libffi-dev \
-#   libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev \
-#   gettext libkrb5-dev"
+BUILD_DEPENDENCIES="gcc g++ make patch pkg-config cmake \
+  libc6-dev \
+  libpq-dev zlib1g-dev libyaml-dev libssl-dev \
+  libgdbm-dev libreadline-dev libncurses5-dev libffi-dev \
+  libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev \
+  gettext libkrb5-dev libyaml-0-2"
 
 
 # Установка инструментов postgresql 11 из архива debian
 #wget https://archive.debian.org/debian/pool/main/p/postgresql-11/postgresql-client-11_11.16-0+deb10u1_amd64.deb
-wget https://archive.debian.org/debian/pool/main/p/postgresql-11/libpq5_11.16-0+deb10u1_amd64.deb
-wget https://archive.debian.org/debian/pool/main/p/postgresql-11/libpq-dev_11.16-0+deb10u1_amd64.deb
+#wget https://archive.debian.org/debian/pool/main/p/postgresql-11/libpq5_11.16-0+deb10u1_amd64.deb
+#wget https://archive.debian.org/debian/pool/main/p/postgresql-11/libpq-dev_11.16-0+deb10u1_amd64.deb
 
-#dpkg -i libpq5_11.16-0+deb10u1_amd64.deb libpq-dev_11.16-0+deb10u1_amd64.deb postgresql-client-11_11.16-0+deb10u1_amd64.deb
-dpkg -i libpq5_11.16-0+deb10u1_amd64.deb libpq-dev_11.16-0+deb10u1_amd64.deb
-#rm libpq* postgresql-client-11_11.16-0+deb10u1_amd64.deb
-rm libpq*
 
 ## Execute a command as GITLAB_USER
 exec_as_git() {
@@ -465,7 +461,7 @@ priority=20
 EOF
 
 # purge build dependencies and cleanup apt
-DEBIAN_FRONTEND=noninteractive apt-get purge -y --auto-remove ${BUILD_DEPENDENCIES}
+#DEBIAN_FRONTEND=noninteractive apt-get purge -y --auto-remove ${BUILD_DEPENDENCIES}
 rm -rf /var/lib/apt/lists/*
 
 # clean up caches
